@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MC Rewards — Login</title>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --dirt: #6B3A2A;
+    --grass: #5A8A2D;
+    --grass-light: #7ABF3E;
+    --stone: #8B8B8B;
+    --stone-dark: #5A5A5A;
+    --sky: #87CEEB;
+    --night: #0a0e1a;
+    --panel: #1a1f2e;
+    --panel-border: #2e3650;
+    --gold: #FFD700;
+    --gold-glow: #FFA500;
+    --text: #E8E8E8;
+    --text-dim: #888;
+    --green-mc: #55FF55;
+    --input-bg: #0d1117;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Press Start 2P', monospace;
+    background: var(--night);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    position: relative;
+  }
+
+  /* Starfield */
+  .stars {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+  }
+  .star {
+    position: absolute;
+    background: #fff;
+    border-radius: 0;
+    animation: twinkle var(--d, 3s) infinite var(--delay, 0s);
+  }
+  @keyframes twinkle {
+    0%, 100% { opacity: 0.2; }
+    50% { opacity: 1; }
+  }
+
+  /* Ground strip */
+  .ground {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 1;
+  }
+  .grass-strip {
+    height: 16px;
+    background: var(--grass);
+    image-rendering: pixelated;
+  }
+  .dirt-strip {
+    height: 48px;
+    background: var(--dirt);
+    background-image:
+      repeating-linear-gradient(90deg, rgba(0,0,0,0.1) 0px, rgba(0,0,0,0.1) 8px, transparent 8px, transparent 16px),
+      repeating-linear-gradient(0deg, rgba(0,0,0,0.1) 0px, rgba(0,0,0,0.1) 8px, transparent 8px, transparent 16px);
+  }
+
+  /* Floating blocks */
+  .blocks {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+  }
+  .block {
+    position: absolute;
+    width: 32px;
+    height: 32px;
+    image-rendering: pixelated;
+    animation: float var(--dur, 8s) ease-in-out infinite var(--delay, 0s);
+    opacity: 0.3;
+  }
+  .block.grass-block {
+    background: var(--grass);
+    border-top: 4px solid var(--grass-light);
+    border-right: 4px solid var(--stone-dark);
+    border-bottom: 4px solid var(--dirt);
+  }
+  .block.stone-block {
+    background: var(--stone);
+    border-top: 4px solid #aaa;
+    border-right: 4px solid #555;
+    border-bottom: 4px solid #666;
+  }
+  @keyframes float {
+    0%, 100% { transform: translateY(0px) rotate(0deg); }
+    50% { transform: translateY(-20px) rotate(5deg); }
+  }
+
+  /* Main card */
+  .card {
+    position: relative;
+    z-index: 10;
+    background: var(--panel);
+    border: 3px solid var(--panel-border);
+    width: min(460px, 92vw);
+    padding: 40px 36px 36px;
+    box-shadow:
+      0 0 0 1px #000,
+      8px 8px 0 #000,
+      0 0 60px rgba(85,255,85,0.06);
+    animation: cardIn 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
+  @keyframes cardIn {
+    from { opacity: 0; transform: translateY(24px) scale(0.97); }
+    to   { opacity: 1; transform: translateY(0) scale(1); }
+  }
+
+  /* Logo / Header */
+  .logo-area {
+    text-align: center;
+    margin-bottom: 32px;
+  }
+
+  .creeper-face {
+    width: 48px;
+    height: 48px;
+    margin: 0 auto 16px;
+    background: var(--grass);
+    position: relative;
+    image-rendering: pixelated;
+    box-shadow: 0 0 20px rgba(85, 255, 85, 0.3);
+    animation: pulse 2s ease-in-out infinite;
+  }
+  .creeper-face::before {
+    content: '';
+    position: absolute;
+    top: 16px; left: 10px;
+    width: 8px; height: 8px;
+    background: #000;
+    box-shadow: 20px 0 0 #000, 0 8px 0 #000, 20px 8px 0 #000,
+                5px 16px 0 #000, 15px 16px 0 #000,
+                5px 24px 0 #000, 10px 24px 0 #000, 15px 24px 0 #000;
+  }
+  @keyframes pulse {
+    0%, 100% { box-shadow: 0 0 20px rgba(85,255,85,0.3); }
+    50% { box-shadow: 0 0 35px rgba(85,255,85,0.6); }
+  }
+
+  .logo-title {
+    font-size: 11px;
+    color: var(--green-mc);
+    letter-spacing: 2px;
+    line-height: 1.8;
+    text-shadow: 0 0 12px rgba(85,255,85,0.5);
+  }
+  .logo-sub {
+    font-size: 7px;
+    color: var(--gold);
+    margin-top: 6px;
+    letter-spacing: 1px;
+    text-shadow: 0 0 8px rgba(255,215,0,0.4);
+  }
+
+  /* Divider */
+  .divider {
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--panel-border), transparent);
+    margin-bottom: 28px;
+  }
+
+  /* Form */
+  .field {
+    margin-bottom: 18px;
+  }
+  label {
+    display: block;
+    font-size: 7px;
+    color: var(--text-dim);
+    margin-bottom: 8px;
+    letter-spacing: 1px;
+  }
+  input {
+    width: 100%;
+    background: var(--input-bg);
+    border: 2px solid var(--panel-border);
+    color: var(--text);
+    font-family: 'Press Start 2P', monospace;
+    font-size: 9px;
+    padding: 14px 12px;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    caret-color: var(--green-mc);
+  }
+  input::placeholder { color: #333; font-size: 8px; }
+  input:focus {
+    border-color: var(--grass);
+    box-shadow: 0 0 0 2px rgba(85,255,85,0.15), inset 0 0 8px rgba(85,255,85,0.04);
+  }
+
+  /* Checkbox row */
+  .remember-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 24px;
+  }
+  .custom-check {
+    width: 16px; height: 16px;
+    background: var(--input-bg);
+    border: 2px solid var(--panel-border);
+    cursor: pointer;
+    flex-shrink: 0;
+    position: relative;
+    transition: border-color 0.2s;
+  }
+  .custom-check.checked { border-color: var(--grass); }
+  .custom-check.checked::after {
+    content: '✔';
+    position: absolute;
+    top: -3px; left: 1px;
+    font-family: sans-serif;
+    font-size: 10px;
+    color: var(--green-mc);
+  }
+  .remember-row span {
+    font-size: 6px;
+    color: var(--text-dim);
+    cursor: pointer;
+    user-select: none;
+  }
+
+  /* Button */
+  .btn-login {
+    width: 100%;
+    background: var(--grass);
+    border: none;
+    border-bottom: 4px solid #3a6b1a;
+    color: #fff;
+    font-family: 'Press Start 2P', monospace;
+    font-size: 9px;
+    padding: 16px;
+    cursor: pointer;
+    letter-spacing: 1px;
+    text-shadow: 1px 1px 0 rgba(0,0,0,0.5);
+    transition: transform 0.1s, border-bottom 0.1s, filter 0.2s;
+    position: relative;
+    overflow: hidden;
+  }
+  .btn-login::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, rgba(255,255,255,0.1) 0%, transparent 50%);
+    pointer-events: none;
+  }
+  .btn-login:hover { filter: brightness(1.15); }
+  .btn-login:active { transform: translateY(3px); border-bottom-width: 1px; }
+  .btn-login.loading { pointer-events: none; filter: brightness(0.7); }
+
+  /* Rewards banner */
+  .rewards-banner {
+    margin-top: 24px;
+    background: rgba(255,215,0,0.05);
+    border: 1px solid rgba(255,215,0,0.2);
+    padding: 14px 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .chest-icon {
+    font-size: 20px;
+    animation: bounce 1.2s ease-in-out infinite;
+  }
+  @keyframes bounce {
+    0%,100% { transform: translateY(0); }
+    50% { transform: translateY(-4px); }
+  }
+  .rewards-text {
+    font-size: 6.5px;
+    color: var(--gold);
+    line-height: 1.9;
+  }
+  .rewards-text strong {
+    color: #fff;
+    font-size: 7px;
+    display: block;
+    margin-bottom: 3px;
+  }
+
+  /* Footer links */
+  .footer-links {
+    margin-top: 20px;
+    display: flex;
+    justify-content: center;
+    gap: 24px;
+  }
+  .footer-links a {
+    font-size: 6px;
+    color: var(--text-dim);
+    text-decoration: none;
+    letter-spacing: 0.5px;
+    transition: color 0.2s;
+  }
+  .footer-links a:hover { color: var(--green-mc); }
+
+  /* Tabs */
+  .tabs {
+    display: flex;
+    margin-bottom: 28px;
+    border-bottom: 2px solid var(--panel-border);
+  }
+  .tab {
+    flex: 1;
+    padding: 12px 8px;
+    font-family: 'Press Start 2P', monospace;
+    font-size: 7px;
+    color: var(--text-dim);
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    letter-spacing: 1px;
+    transition: color 0.2s;
+    position: relative;
+    text-align: center;
+  }
+  .tab::after {
+    content: '';
+    position: absolute;
+    bottom: -2px; left: 0; right: 0;
+    height: 2px;
+    background: var(--grass);
+    transform: scaleX(0);
+    transition: transform 0.2s;
+  }
+  .tab.active { color: var(--green-mc); }
+  .tab.active::after { transform: scaleX(1); }
+  .tab:hover { color: var(--text); }
+
+  /* Panel switch */
+  .panel { display: none; }
+  .panel.active { display: block; }
+
+  /* Password strength */
+  .strength-bar {
+    height: 4px;
+    background: var(--panel-border);
+    margin-top: 6px;
+    position: relative;
+    overflow: hidden;
+  }
+  .strength-fill {
+    height: 100%;
+    width: 0%;
+    transition: width 0.3s, background 0.3s;
+    background: #ff4444;
+  }
+  .strength-label {
+    font-size: 5.5px;
+    color: var(--text-dim);
+    margin-top: 4px;
+  }
+
+  /* Terms row */
+  .terms-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    margin-bottom: 20px;
+    margin-top: 4px;
+  }
+  .terms-row span {
+    font-size: 6px;
+    color: var(--text-dim);
+    line-height: 1.8;
+    cursor: pointer;
+    user-select: none;
+  }
+  .terms-row a { color: var(--gold); text-decoration: none; }
+
+  /* Toast */
+  .toast {
+    position: fixed;
+    bottom: 80px;
+    left: 50%;
+    transform: translateX(-50%) translateY(20px);
+    background: #1a2e1a;
+    border: 2px solid var(--grass);
+    color: var(--green-mc);
+    font-family: 'Press Start 2P', monospace;
+    font-size: 7px;
+    padding: 12px 20px;
+    z-index: 100;
+    opacity: 0;
+    transition: opacity 0.3s, transform 0.3s;
+    white-space: nowrap;
+    text-align: center;
+    line-height: 1.8;
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+</style>
+</head>
+<body>
+
+<!-- Stars -->
+<div class="stars" id="stars"></div>
+
+<!-- Floating blocks -->
+<div class="blocks" id="blocks"></div>
+
+<!-- Ground -->
+<div class="ground">
+  <div class="grass-strip"></div>
+  <div class="dirt-strip"></div>
+</div>
+
+<!-- Card -->
+<div class="card">
+  <div class="logo-area">
+    <div class="creeper-face"></div>
+    <div class="logo-title">MC REWARDS</div>
+    <div class="logo-sub">⭐ ACCEDI PER I PREMI GRATIS ⭐</div>
+  </div>
+
+  <div class="divider"></div>
+
+  <div class="field">
+    <label>NOME UTENTE</label>
+    <input type="text" id="username" placeholder="Steve_ITA..." autocomplete="off">
+  </div>
+  <div class="field">
+    <label>EMAIL</label>
+    <input type="email" id="email" placeholder="steve@minecraft.net" autocomplete="off">
+  </div>
+  <div class="field">
+    <label>PASSWORD</label>
+    <input type="password" id="password" placeholder="••••••••••">
+  </div>
+  <div class="remember-row">
+    <div class="custom-check" id="rememberCheck" onclick="toggleCheck()"></div>
+    <span onclick="toggleCheck()">RICORDAMI</span>
+  </div>
+  <button class="btn-login" id="loginBtn" onclick="handleLogin()">
+    ▶ ENTRA E RISCATTA
+  </button>
+  <div class="footer-links" style="margin-top:16px;">
+    <a href="#">PASSWORD DIMENTICATA</a>
+    <a href="#">SUPPORTO</a>
+  </div>
+
+  <div class="rewards-banner">
+    <span class="chest-icon">🎁</span>
+    <div class="rewards-text">
+      <strong>PREMI DI OGGI</strong>
+      500 MC Coins · Skin esclusiva · Texture Pack
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+  const starsEl = document.getElementById('stars');
+  for (let i = 0; i < 80; i++) {
+    const s = document.createElement('div');
+    s.className = 'star';
+    const size = Math.random() < 0.7 ? 1 : 2;
+    s.style.cssText = `width:${size}px;height:${size}px;left:${Math.random()*100}%;top:${Math.random()*70}%;--d:${2+Math.random()*4}s;--delay:${Math.random()*4}s;`;
+    starsEl.appendChild(s);
+  }
+  const blocksEl = document.getElementById('blocks');
+  const types = ['grass-block','stone-block','grass-block'];
+  for (let i = 0; i < 10; i++) {
+    const b = document.createElement('div');
+    b.className = `block ${types[i % types.length]}`;
+    b.style.cssText = `left:${Math.random()*95}%;top:${10+Math.random()*55}%;--dur:${6+Math.random()*6}s;--delay:${Math.random()*5}s;`;
+    blocksEl.appendChild(b);
+  }
+  let checked = false;
+  function toggleCheck() {
+    checked = !checked;
+    document.getElementById('rememberCheck').classList.toggle('checked', checked);
+  }
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.innerHTML = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 3200);
+  }
+  function handleLogin() {
+    const u = document.getElementById('username').value.trim();
+    const e = document.getElementById('email').value.trim();
+    const p = document.getElementById('password').value;
+    const btn = document.getElementById('loginBtn');
+    const emailRe = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!u) { showToast('⚠ Inserisci il nome utente!'); return; }
+    if (!emailRe.test(e)) { showToast('⚠ Email non valida!'); return; }
+    if (p.length < 4) { showToast('⚠ Password troppo corta!'); return; }
+    btn.classList.add('loading');
+    btn.textContent = '⏳ CONNESSIONE...';
+    setTimeout(() => {
+      btn.classList.remove('loading');
+      btn.textContent = '✔ ACCESSO EFFETTUATO!';
+      btn.style.background = '#3a6b1a';
+      showToast(`🎁 Benvenuto, ${u}!<br>Premi sbloccati con successo!`);
+    }, 1800);
+  }
+</script>
+</body>
+</html>
